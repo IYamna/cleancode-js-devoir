@@ -1,0 +1,9 @@
+La fonction fight a plusieurs responsabillités entre la sélection de l'arme, le status du jeu et le combat en lui même, si on suit les bonnes pratiques de la refactorisation, il faut que chaque fonction suive le Single Responsibility Principle qui signifie qu'au lieu d'avoir plusieurs choses qui se passent dans une seule fonction, soit le séparer en plusieurs fonctions directement, soit remettre les responsabilités à un endroit plus cohérent, c'est à dire dans une fonction qui serait "légitime" d'assumer la responsabilité. Dans ce cas là, séparer le tas de code en fonctions plus courtes et + "straight-forward" avec chacune une responsabilité, comme "weaponDamage", "gameState", "playerHealth" plutôt que tout regrouper en une seule énorme fonction qui rend le code indigeste
+
+Aussi, il faut appliquer le principe de "failfast", autrement dit au lieu d'avoir des conditions imbriquées "if(hasInit){if(hasRound){if(!hasFought)", les exécuter plus tôt et laisser un fail arriver dès le début si les conditions ne sont pas validées.
+
+Egalement au lieu d'avoir un switch case aussi long et devoir recalculer à chaque fois les dégats de l'arme, regrouper les données concernant les armes comme le type d'arme et son damage, par exemple on pourrait rajouter dans le json des propriétés baseDamage, damageMultiplier plutôt que les calculer en dur. En continuant de suivre ce principe de diviser le code en plus petites parties et en ayant pour objectif de pas se répéter dans son code ( Principe DRY ), on regrouperait le calcul du dégat de l'arme plutôt que avoir deux fois le même code avec pour seule différence le fait que ce soit le player ou le enemy.
+
+Les solutions concrètes : 
+
+- Extraire les concepts des responsabilités présents dans la méthode fight et en faire des classes/objets/fonctions séparés comme une fonction calculateDamage, getRandomWeapon, gameState

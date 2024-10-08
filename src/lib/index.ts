@@ -1,163 +1,116 @@
-
 import weapons from './weaponList.json';
 
-export let weaponList: any[] = [];
+export interface Weapon {
+    name: string;
+    description: string;
+    rarity: string;
+    baseDamage: number;
+    useRandom: boolean;
+    damageMultiplier: number;
+}
 
-export function init() {
-    weaponList = weapons;
+interface Player {
+    health: number;
+    weapon: Weapon;
+}
 
+interface GameState {
+    player: Player;
+    enemy: Player;
+    hasRound: boolean;
+    hasFought: boolean;
+    isGameOver: boolean;
+    availableWeaponRerolls: number;
+}
 
-    let playerMaxHealth = 10;
-    let playerCurrentHealth = 10;
-    let enemyMaxHealth = 10;
-    let enemyCurrentHealth = 10;
-    let playerWeapon = weaponList[Math.floor(Math.random() * weaponList.length)];
-    let enemyWeapon = null;
-    let hasInit = true;
-    let hasRound = true;
-    let hasFought = false;
-    let playerWon = false;
-    let playerLost = false;
+export let weaponList: Weapon[] = [];
 
-    weaponList = weapons;
+function getRandomWeapon(): Weapon {
+    return weaponList[Math.floor(Math.random() * weaponList.length)];
+}
+
+export function getNewGameState(): GameState {
 
     return {
-        playerMaxHealth,
-        playerCurrentHealth,
-        enemyMaxHealth,
-        enemyCurrentHealth,
-        playerWeapon,
-        enemyWeapon,
-        hasInit,
-        hasRound,
-        hasFought,
-        playerWon,
-        playerLost
-    }
+        player: { health: 10, weapon: getRandomWeapon() },
+        enemy: { health: 10, weapon: getRandomWeapon() },
+        hasRound: true,
+        hasFought: false,
+        isGameOver: false,
+        availableWeaponRerolls: 2
+    };
 }
 
-export function newRound(hasInit: boolean) {
-    if(hasInit) {
-        weaponList = weapons;
+export function init(): GameState {
+    weaponList = weapons as Weapon[];
 
-        return {
-            playerWeapon: weaponList[Math.floor(Math.random() * weaponList.length)],
-            enemyWeapon: null,
-            hasRound: true,
-            hasFought: false
-        }
+    let playerWeapon = getRandomWeapon();
+    let enemyWeapon = getRandomWeapon();
+
+    return getNewGameState();
+}
+
+export function calculateDamage(weapon: Weapon): number {
+    if (weapon.useRandom) {
+        return weapon.damageMultiplier * (Math.floor(Math.random() * weapon.baseDamage) + 1); // Ensuring at least 1 damage
     } else {
-        throw new Error('Game not initialized');
+        return weapon.damageMultiplier * weapon.baseDamage;
     }
 }
 
-export function fight(playerHealth: number, enemyHealth: number, playerWeapon: any, hasInit: boolean, hasRound: boolean, hasFought: boolean): Array<number|boolean> {
-    
-    if(hasInit){
-        if(hasRound){
-            if(!hasFought) {
-    
-                let playerDamages: number = 0;
-                let enemyDamages: number = 0;
-            
-                switch (playerWeapon.name) {
-                    case 'hatchet':
-                    case 'knife':
-                    case 'spear':
-                        playerDamages += 1;
-                        break;
-                    case 'sword':
-                    case 'halberd': 
-                        playerDamages += 5;
-                        break;
-                    case 'bow':
-                        playerDamages += 1 * (Math.floor(Math.random() * 5));
-                        break;
-                    case 'crossbow':
-                        playerDamages += 2 * (Math.floor(Math.random() * 5));
-                        break
-                    case 'darts':
-                        playerDamages += 1 * (Math.floor(Math.random() * 3));
-                        break;
-                    case 'dagger':
-                        playerDamages += 3;
-                        break;
-                    default:
-                        throw new Error('Invalid weapon');
-                }
-            
-                // reset weapon list so the enemy could play
-                weaponList = weapons;
-            
-                let enemyWeapon = weaponList[Math.floor(Math.random() * weaponList.length)];
-            
-                switch (enemyWeapon.name) {
-                    case 'hatchet':
-                    case 'knife':
-                    case 'spear':
-                        enemyDamages += 1;
-                        break;
-                    case 'sword':
-                    case 'halberd': 
-                        enemyDamages += 5;
-                        break;
-                    case 'bow':
-                        enemyDamages += 1 * (Math.floor(Math.random() * 5));
-                        break;
-                    case 'crossbow':
-                        enemyDamages += 2 * (Math.floor(Math.random() * 5));
-                        break
-                    case 'darts':
-                        enemyDamages += 1 * (Math.floor(Math.random() * 3));
-                        break;
-                    case 'dagger':
-                        enemyDamages += 3;
-                        break;
-                    default:
-                        throw new Error('Invalid weapon');
-                }
-
-                if(playerDamages === enemyDamages) {
-                    return [playerHealth, enemyHealth];
-                }
-            
-                if(playerDamages > enemyDamages) {
-                    enemyHealth -= playerDamages - enemyDamages;
-                } else {
-                    playerHealth -= enemyDamages - playerDamages;
-                }
-           
-                // health cannot be negative
-                if(playerHealth <= 0) {
-                    playerHealth = 0;
-                }
-            
-                // health cannot be negative
-                if(enemyHealth <= 0) {
-                    enemyHealth = 0;
-                }
-                
-                // check if the game is over and the player has won
-                if(enemyHealth === 0) {
-                    return [playerHealth, enemyHealth, enemyWeapon, true, true, false];
-                }
 
 
-                // check if the game is over and the player has lost
-                if(playerHealth === 0) {
-                    return [playerHealth, enemyHealth, enemyWeapon, true, false, true];
-                }
-            
-                return [playerHealth, enemyHealth, enemyWeapon, true, false, false];
-            }else{
-                throw new Error('Round already played');
-            }
-        }else{
-            throw new Error('Round not initialized');
-        }
-    }else{
+export function newRound(hasInit: boolean): GameState {
+    if(hasInit) {
         throw new Error('Game not initialized');
     }
 
+    return getNewGameState();
+}
 
+function validateGameState(gameState: GameState): void {
+    if (!gameState.hasRound) {
+        throw new Error('Round not initialized');
+    }
+    if (gameState.hasFought) {
+        throw new Error('Round already played');
+    }
+}
+
+function adjustHealth(currentHealth: number, damage: number): number {
+    let newHealth = currentHealth - damage;
+    return Math.max(newHealth, 0); 
+}
+
+export function fight(gameState: GameState): GameState {
+    validateGameState(gameState);
+
+    let playerDamage = calculateDamage(gameState.player.weapon);
+    let enemyDamage = calculateDamage(gameState.enemy.weapon);
+
+    gameState.player.health = adjustHealth(gameState.player.health, enemyDamage);
+    gameState.enemy.health = adjustHealth(gameState.enemy.health, playerDamage);
+
+    gameState.hasFought = true;
+
+    if (gameState.player.health === 0) {
+        gameState.isGameOver = true; // Player lost
+    }
+    if (gameState.enemy.health === 0) {
+        gameState.isGameOver = true; // Player won
+    }
+
+    return gameState;
+}
+
+export function rerollWeapon(gameState: GameState): GameState {
+    if (gameState.availableWeaponRerolls <= 0) {
+        throw new Error('No available rerolls left');
+    }
+    const newWeapon = getRandomWeapon();
+
+    gameState.player.weapon = newWeapon;
+    gameState.availableWeaponRerolls -= 1;
+
+    return gameState;
 }
